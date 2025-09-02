@@ -1,0 +1,85 @@
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Diagnostics</title>
+<style>
+body{background:#0e0b14;color:#e8e5f0;font-family:system-ui,Segoe UI,Inter,Arial;margin:0;padding:20px}
+h1{margin:0 0 12px 0} .card{background:#171326;border:1px solid #2a2540;border-radius:16px;padding:16px;margin-bottom:16px}
+button{background:#1c1828;color:#e8e5f0;border:1px solid #2a2540;border-radius:10px;padding:8px 12px;cursor:pointer}
+table{width:100%;border-collapse:collapse;margin-top:10px} th,td{border:1px solid #2a2540;padding:6px 8px;font-size:14px}
+small{opacity:.8}
+</style>
+</head><body>
+<h1>Castle Town — Diagnostics</h1>
+<div class="card">
+  <button id="run">Run Checks</button>
+  <button id="clearLS">Clear local models override</button>
+  <button id="hardReload">Hard Reload</button>
+  <div id="log" style="margin-top:10px;font-family:ui-monospace,Menlo,monospace"></div>
+</div>
+<div class="card">
+  <h3>models.json</h3>
+  <div id="cfg"></div>
+</div>
+<div class="card">
+  <h3>VRM Paths Check</h3>
+  <div id="table"></div>
+</div>
+<script type="module">
+const log = (...a)=>{ document.getElementById('log').innerHTML += a.map(x=>typeof x==='string'?x:JSON.stringify(x)).join(' ')+'<br/>'; };
+const tries = ["../../data/models.json","../data/models.json","./data/models.json"];
+async function loadCfg(){
+  const local = localStorage.getItem('ct.models.json');
+  if (local) {
+    log("Using local override (ct.models.json).");
+    return JSON.parse(local);
+  }
+  for (const u of tries) {
+    try {
+      const res = await fetch(u, { cache:'no-store' });
+      if (res.ok) { log("Loaded:", u); return await res.json(); }
+      else log("Tried", u, "→", res.status);
+    } catch (e) { log("Tried", u, "→ error"); }
+  }
+  throw new Error("models.json not found");
+}
+function showCfg(cfg){
+  const div = document.getElementById('cfg');
+  div.innerHTML = '<pre>'+JSON.stringify(cfg, null, 2)+'</pre>';
+}
+async function head(url){
+  // Try a tiny range to avoid full download; if range unsupported, fallback to GET
+  try {
+    const res = await fetch(url, { headers: { Range: 'bytes=0-64' } });
+    return res.ok ? res : await fetch(url, { method:'GET' });
+  } catch(e){ return { ok:false, statusText:String(e) }; }
+}
+async function checkVRMs(cfg){
+  const root = document.getElementById('table');
+  const rows = [['Character','VRM Path','Resolved URL','Status']];
+  for (const ch of cfg.characters) {
+    const resolved = new URL(ch.vrm, location.href).href;
+    let status = '—';
+    try {
+      const res = await head(resolved);
+      status = res.ok ? 'OK' : ('ERR ' + (res.status||res.statusText||''));
+    } catch(e){ status = 'ERR '+String(e); }
+    rows.push([ch.name, ch.vrm, resolved, status]);
+  }
+  const html = '<table>'+rows.map((r,i)=>'<tr>'+r.map((c,j)=> (i?'<td>':'<th>')+c+'</'+(i?'td':'th')+'>').join('')+'</tr>').join('')+'</table>';
+  root.innerHTML = html;
+}
+document.getElementById('run').onclick = async ()=>{
+  document.getElementById('log').innerHTML='';
+  try {
+    const cfg = await loadCfg();
+    showCfg(cfg);
+    await checkVRMs(cfg);
+    log("Done.");
+  } catch(e){
+    log("ERROR:", e.message||String(e));
+  }
+};
+document.getElementById('clearLS').onclick = ()=>{ localStorage.removeItem('ct.models.json'); alert('Cleared local override. Reload this page and run checks.'); };
+document.getElementById('hardReload').onclick = ()=>{ location.href = location.pathname + '?v=' + Date.now(); };
+</script>
+</body></html>
