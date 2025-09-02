@@ -1,0 +1,36 @@
+name: Zip Wings (Release)
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g., wings-backup-v1)'
+        required: true
+        default: 'wings-backup-v1'
+
+jobs:
+  zip-wings-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Zip asset/wings
+        run: |
+          mkdir -p out
+          if [ -d "asset/wings" ]; then
+            cd asset && zip -r ../out/wings-backup.zip wings
+          else
+            echo "asset/wings not found" && exit 1
+          fi
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.tag }}
+          name: ${{ github.event.inputs.tag }}
+          draft: false
+          prerelease: false
+          files: out/wings-backup.zip
