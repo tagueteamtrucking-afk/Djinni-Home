@@ -1,0 +1,19 @@
+{
+  "characters": [
+    {"id":"abbey","name":"Abbey","vrm":"./asset/models/abbey.vrm","room":"./pages/rooms/abbey.html","wings":{"enabled":false,"asset":"","boneHint":"Chest","position":[0,0.1,-0.05],"rotation":[0,0,0],"scale":[1,1,1]}},
+    {"id":"alexandria","name":"Alexandria","vrm":"./asset/models/alexandria.vrm","room":"./pages/rooms/alexandria.html","wings":{"enabled":false,"asset":"","boneHint":"Chest","position":[0,0.1,-0.05],"rotation":[0,0,0],"scale":[1,1,1]}},
+    {"id":"billie","name":"Billie","vrm":"./asset/models/billie.vrm","room":"./pages/rooms/billie.html","wings":{"enabled":false,"asset":"","boneHint":"Chest","position":[0,0.1,-0.05],"rotation":[0,0,0],"scale":[1,1,1]}},
+    {"id":"carol","name":"Carol","vrm":"./asset/models/carol.vrm","room":"./pages/rooms/carol.html","wings":{"enabled":false,"asset":"","boneHint":"Chest","position":[0,0.1,-0.05],"rotation":[0,0,0],"scale":[1,1,1]}},
+    {"id":"charlotte","name":"Charlotte","vrm":"./asset/models/charlotte.vrm","room":"./pages/rooms/charlotte.html","wings":{"enabled":false,"asset":"","boneHint":"Chest","position":[0,0.1,-0.05],"rotation":[0,0,0],"scale":[1,1,1]}},
+    {"id":"clarice","name":"Clarice","vrm":"./asset/models/clarice.vrm","room":"./pages/rooms/clarice.html","wings":{"enabled":false,"asset":"","boneHint":"Chest","position":[0,0.1,-0.05],"rotation":[0,0,0],"scale":[1,1,1]}},
+    {"id":"jem","name":"Jem","vrm":"./asset/models/jem.vrm","room":"./pages/rooms/jem.html","wings":{"enabled":false,"asset":"","boneHint":"Chest","position":[0,0.1,-0.05],"rotation":[0,0,0],"scale":[1,1,1]}},
+    {"id":"nina","name":"Nina","vrm":"./asset/models/nina.vrm","room":"./pages/rooms/nina.html","wings":{"enabled":false,"asset":"","boneHint":"Chest","position":[0,0.1,-0.05],"rotation":[0,0,0],"scale":[1,1,1]}},
+    {"id":"odessa","name":"Odessa","vrm":"./asset/models/odessa.vrm","room":"./pages/rooms/odessa.html","wings":{"enabled":false,"asset":"","boneHint":"Chest","position":[0,0.1,-0.05],"rotation":[0,0,0],"scale":[1,1,1]}},
+    {"id":"reyczar","name":"Reyczar","vrm":"./asset/models/reyczar.vrm","room":"./pages/rooms/reyczar.html","wings":{"enabled":false,"asset":"","boneHint":"Chest","position":[0,0.1,-0.05],"rotation":[0,0,0],"scale":[1,1,1]}},
+    {"id":"sorcha","name":"Sorcha","vrm":"./asset/models/sorcha.vrm","room":"./pages/rooms/sorcha.html","wings":{"enabled":false,"asset":"","boneHint":"Chest","position":[0,0.1,-0.05],"rotation":[0,0,0],"scale":[1,1,1]}},
+    {"id":"stella","name":"Stella","vrm":"./asset/models/stella.vrm","room":"./pages/rooms/stella.html","wings":{"enabled":false,"asset":"","boneHint":"Chest","position":[0,0.1,-0.05],"rotation":[0,0,0],"scale":[1,1,1]}},
+    {"id":"themis","name":"Themis","vrm":"./asset/models/themis.vrm","room":"./pages/rooms/themis.html","wings":{"enabled":false,"asset":"","boneHint":"Chest","position":[0,0.1,-0.05],"rotation":[0,0,0],"scale":[1,1,1]}},
+    {"id":"tracy","name":"Tracy","vrm":"./asset/models/tracy.vrm","room":"./pages/rooms/tracy.html","wings":{"enabled":false,"asset":"","boneHint":"Chest","position":[0,0.1,-0.05],"rotation":[0,0,0],"scale":[1,1,1]}},
+    {"id":"whitestar","name":"WhiteStar","vrm":"./asset/models/whitestar.vrm","room":"./pages/rooms/whitestar.html","wings":{"enabled":false,"asset":"","boneHint":"Chest","position":[0,0.1,-0.05],"rotation":[0,0,0],"scale":[1,1,1]}}
+  ]
+}
