@@ -1,0 +1,106 @@
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Wing Room — Repo Paths Only</title>
+<link rel="stylesheet" href="../asset/css/town.css"/>
+</head><body>
+<div class="topbar"><a href="../index.html">← Town</a><strong>Wing Room</strong><a href="./plaza.html">Plaza</a></div>
+<div class="spacer"></div>
+<div class="container">
+  <div class="grid">
+    <div class="card">
+      <h3>1) Use Repo Paths (no local files)</h3>
+      <div class="alert">Example VRM: <code>./asset/models/whitestar.vrm</code><br/>Example Wings: <code>./asset/wings/angel/angel.glb</code></div>
+      <div class="row"><label>Character (from <code>data/models.json</code>)</label><select id="character"></select></div>
+      <div class="row"><label>VRM path</label><input id="vrmPath" placeholder="./asset/models/whitestar.vrm"/></div>
+      <div class="row"><label>Wings path</label><input id="wingsPath" placeholder="./asset/wings/angel/angel.glb"/></div>
+      <div class="flex">
+        <label>Bone</label>
+        <select id="boneHint"><option>UpperChest</option><option selected>Chest</option><option>Spine</option></select>
+        <button class="btn" id="load">Load Preview</button>
+      </div>
+      <small class="mono" id="status"></small>
+    </div>
+    <div class="card">
+      <h3>2) Fit Controls</h3>
+      <div class="controls">
+        <div class="row"><span>Pos X</span><input id="px" type="range" min="-1" max="1" step="0.005" value="0"/></div>
+        <div class="row"><span>Pos Y</span><input id="py" type="range" min="-1" max="1" step="0.005" value="0.1"/></div>
+        <div class="row"><span>Pos Z</span><input id="pz" type="range" min="-1" max="1" step="0.005" value="-0.05"/></div>
+        <div class="row"><span>Rot X°</span><input id="rx" type="range" min="-180" max="180" step="0.5" value="0"/></div>
+        <div class="row"><span>Rot Y°</span><input id="ry" type="range" min="-180" max="180" step="0.5" value="0"/></div>
+        <div class="row"><span>Rot Z°</span><input id="rz" type="range" min="-180" max="180" step="0.5" value="0"/></div>
+        <div class="row"><span>Scale X</span><input id="sx" type="range" min="0.1" max="3" step="0.01" value="1"/></div>
+        <div class="row"><span>Scale Y</span><input id="sy" type="range" min="0.1" max="3" step="0.01" value="1"/></div>
+        <div class="row"><span>Scale Z</span><input id="sz" type="range" min="0.1" max="3" step="0.01" value="1"/></div>
+      </div>
+      <div class="flex">
+        <button class="btn" id="attach">Attach & Save</button>
+        <button class="btn" id="download">Download models.json</button>
+      </div>
+    </div>
+  </div>
+  <canvas id="scene"></canvas>
+</div>
+<script type="module">
+import * as THREE from "https://unpkg.com/three@0.152.2/build/three.module.js";
+import { OrbitControls } from "https://unpkg.com/three@0.152.2/examples/jsm/controls/OrbitControls.js";
+import { GLTFLoader } from "https://unpkg.com/three@0.152.2/examples/jsm/loaders/GLTFLoader.js";
+import * as VRM from "https://unpkg.com/@pixiv/three-vrm@3.2.0/lib/three-vrm.module.js";
+import { loadModelsConfig, saveCharacterWings, addLights, fitOrbitToScene, loadVRM, loadWingsMesh, applyWingsToVRM } from "../asset/js/vrm-utils.js";
+const S = id => document.getElementById(id);
+const canvas = S('scene'); const renderer = new THREE.WebGLRenderer({ canvas, antialias:true });
+renderer.setPixelRatio(devicePixelRatio); renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+const scene = new THREE.Scene(); scene.background = new THREE.Color(0x0c0a12);
+const camera = new THREE.PerspectiveCamera(45, canvas.clientWidth/canvas.clientHeight, .1, 100); camera.position.set(0,1.4,3);
+const controls = new OrbitControls(camera, renderer.domElement); addLights(scene);
+const clock = new THREE.Clock(); addEventListener('resize',()=>{ renderer.setSize(canvas.clientWidth,canvas.clientHeight); camera.aspect=canvas.clientWidth/canvas.clientHeight; camera.updateProjectionMatrix(); });
+let cfg = await loadModelsConfig(); let current = cfg.characters[0]?.id||null; let vrm=null, wings=null, wingsNode=null;
+const charSel = S('character'); cfg.characters.forEach((c,i)=>{ const o=document.createElement('option'); o.value=c.id; o.textContent=c.name; charSel.appendChild(o); if(i===0) current=c.id; }); charSel.onchange=e=>current=e.target.value;
+function setStatus(msg){ S('status').innerHTML = msg; }
+async function head(url){ try{ const r=await fetch(url,{headers:{Range:'bytes=0-64'}}); return r.ok ? 'OK' : ('ERR '+r.status); }catch(e){ return 'ERR'; } }
+async function loadPreview(){
+  // check paths before loading
+  const v = S('vrmPath').value.trim();
+  const w = S('wingsPath').value.trim();
+  const vAbs = new URL(v, location.href).href;
+  const wAbs = w ? new URL(w, location.href).href : '';
+  const vStat = await head(vAbs);
+  const wStat = w ? await head(wAbs) : '—';
+  setStatus(`VRM: ${vStat} — ${v}<br/>Wings: ${wStat} — ${w||'(none)'}`);
+
+  while(scene.children.length) scene.remove(scene.children[0]); addLights(scene);
+
+  try{
+    const res = await loadVRM(v);
+    vrm = res.vrm; scene.add(vrm.scene);
+    if (w) { wings = await loadWingsMesh(w); wingsNode = applyWingsToVRM(vrm, wings, S('boneHint').value); scene.add(wingsNode); }
+    ['px','py','pz','rx','ry','rz','sx','sy','sz'].forEach(id=>S(id).dispatchEvent(new Event('input')));
+    fitOrbitToScene(controls, scene);
+  }catch(e){
+    alert("Failed to load. See status lines. Check your paths and try GLB for wings.");
+  }
+}
+function updateTransform(){ if(!wingsNode) return;
+  const d2r = d => d*Math.PI/180;
+  wingsNode.position.set(parseFloat(S('px').value),parseFloat(S('py').value),parseFloat(S('pz').value));
+  wingsNode.rotation.set(d2r(parseFloat(S('rx').value)),d2r(parseFloat(S('ry').value)),d2r(parseFloat(S('rz').value)));
+  wingsNode.scale.set(parseFloat(S('sx').value),parseFloat(S('sy').value),parseFloat(S('sz').value));
+}
+['px','py','pz','rx','ry','rz','sx','sy','sz'].forEach(id=>S(id).addEventListener('input', updateTransform));
+S('load').onclick = loadPreview;
+S('attach').onclick = ()=>{
+  const chosen = cfg.characters.find(c=>c.id===current); if(!chosen) return;
+  chosen.vrm = S('vrmPath').value.trim() || chosen.vrm;
+  const w = S('wingsPath').value.trim();
+  chosen.wings = w ? { enabled:true, asset:w, boneHint:S('boneHint').value,
+    position:[parseFloat(S('px').value),parseFloat(S('py').value),parseFloat(S('pz').value)],
+    rotation:[parseFloat(S('rx').value),parseFloat(S('ry').value),parseFloat(S('rz').value)],
+    scale:[parseFloat(S('sx').value),parseFloat(S('sy').value),parseFloat(S('sz').value)] } :
+    { enabled:false, asset:"", boneHint:"Chest", position:[0,0.1,-0.05], rotation:[0,0,0], scale:[1,1,1] };
+  localStorage.setItem('ct.models.json', JSON.stringify(cfg));
+  alert('Saved to temporary config. Download models.json and commit when ready.');
+};
+S('download').onclick = ()=>{ const blob = new Blob([JSON.stringify(cfg,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='models.json'; a.click(); };
+(function anim(){ requestAnimationFrame(anim); const dt=clock.getDelta(); renderer.render(scene,camera); })();
+</script>
+</body></html>
