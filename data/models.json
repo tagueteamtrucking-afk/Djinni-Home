@@ -1,0 +1,12 @@
+[
+  {
+    "id": "abbey",
+    "name": "Abbey \u2014 Grand Vault",
+    "path": "../asset/models/abbey.vrm"
+  },
+  {
+    "id": "whitestar",
+    "name": "White Star \u2014 Palace",
+    "path": "../asset/models/whitestar.vrm"
+  }
+]
