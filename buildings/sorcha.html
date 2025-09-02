@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>Sorcha — Social Mansion</title>
+<link rel="stylesheet" href="../asset/css/town.css"/>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.152.2/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.152.2/examples/jsm/",
+    "@pixiv/three-vrm": "https://unpkg.com/@pixiv/three-vrm@2.0.5/lib/three-vrm.module.js"
+  }
+}
+</script>
+</head>
+<body class="safe-pad" data-model="../asset/models/sorcha.vrm">
+  <div class="topbar"><a href="../pages/plaza.html">← Plaza</a><strong>Sorcha — Social Mansion</strong></div>
+  <canvas id="scene"></canvas>
+  <div id="hud" class="hud">Booting…</div>
+  <script type="module">
+    const ensureHUD = () => {{ let h=document.getElementById('hud'); if(!h){{ h=document.createElement('div'); h.id='hud'; h.className='hud'; document.body.appendChild(h);} } return h; }};
+    const HUD = ensureHUD();
+    addEventListener('error', e => HUD.textContent = 'Error: ' + e.message);
+    addEventListener('unhandledrejection', e => HUD.textContent = 'Promise error: ' + (e.reason?.message || e.reason));
+
+    import * as THREE from "three";
+    import {{ OrbitControls }} from "three/addons/controls/OrbitControls.js";
+    import {{ GLTFLoader }} from "three/addons/loaders/GLTFLoader.js";
+    import {{ VRM, VRMUtils }} from "@pixiv/three-vrm";
+
+    const canvas = document.getElementById('scene');
+    const renderer = new THREE.WebGLRenderer({{ canvas, antialias:true }});
+    renderer.setPixelRatio(devicePixelRatio); renderer.setSize(innerWidth, innerHeight);
+
+    const scene = new THREE.Scene(); scene.background = new THREE.Color(0x121218);
+    const camera = new THREE.PerspectiveCamera(35, innerWidth/innerHeight, 0.1, 100); camera.position.set(0,1.5,3);
+    const controls = new OrbitControls(camera, renderer.domElement); controls.enableDamping = true;
+
+    scene.add(new THREE.AmbientLight(0xffffff,0.7));
+    const key = new THREE.DirectionalLight(0xffffff,1.0); key.position.set(3,5,4); scene.add(key);
+
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(10,10), new THREE.MeshStandardMaterial({{ color:0x1b1f2b, roughness:0.9, metalness:0.05 }}));
+    floor.rotation.x = -Math.PI/2; floor.position.y = -1; scene.add(floor);
+
+    addEventListener('resize', ()=>{{ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); }});
+
+    let vrm=null; const clock=new THREE.Clock();
+    async function loadVRM(url){{
+      HUD.textContent = 'Loading VRM: ' + url;
+      const gltf = await new GLTFLoader().loadAsync(url);
+      VRMUtils.removeUnnecessaryJoints(gltf.scene);
+      const loaded = await VRM.from(gltf);
+      if (vrm) scene.remove(vrm.scene);
+      vrm = loaded; vrm.scene.rotation.y = Math.PI; scene.add(vrm.scene);
+      HUD.textContent = 'Loaded ' + url.split('/').pop();
+    }}
+
+    loadVRM(document.body.dataset.model).catch(e => {{ HUD.textContent = 'VRM load error: ' + e.message; console.error(e); }});
+
+    (function loop(){{
+      requestAnimationFrame(loop);
+      const dt = clock.getDelta();
+      if (vrm) vrm.update(dt);
+      controls.update();
+      renderer.render(scene, camera);
+    }})();
+  </script>
+</body>
+</html>
