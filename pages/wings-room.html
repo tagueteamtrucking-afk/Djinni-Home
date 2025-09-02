@@ -8,9 +8,20 @@
 </head>
 <body>
   <div class="topbar">
-    <a href="../pages/plaza.html">← Plaza</a>
+    <a href="../plaza.html">← Plaza</a>
+
+    <label>Model:
+      <select id="modelSelect"></select>
+    </label>
+
+    <label>Wing:
+      <select id="wingSelect"></select>
+    </label>
+
     <button id="loadVrmBtn">Load VRM</button>
     <button id="loadWingBtn">Load Wing</button>
+    <button id="saveBtn" title="Save placement for this model">Save</button>
+    <button id="loadBtn" title="Load saved placement for this model">Load</button>
   </div>
 
   <canvas id="scene"></canvas>
@@ -18,7 +29,10 @@
 
   <script type="module">
     import { startWingsRoom } from "../asset/js/wings-room.js";
-    startWingsRoom("../asset/models/abbey.vrm", "../asset/wings/Wing 1415.fbx");
+    startWingsRoom({
+      modelsManifest: "../data/models.json",
+      wingsManifest:  "../data/wings.json"
+    });
   </script>
 </body>
 </html>
