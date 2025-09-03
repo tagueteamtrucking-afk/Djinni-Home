@@ -1,0 +1,26 @@
+/* asset/css/vr.css */
+:root {
+  --hud-bg: rgba(10,10,14,0.65);
+  --hud-fg: #f3f3f3;
+  --accent: #6cf2ff;
+}
+html, body {
+  margin: 0; padding: 0; height: 100%;
+  background: #0b0d14;
+  color: var(--hud-fg);
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+}
+#app { display:block; width:100vw; height:100vh; }
+#hud {
+  position: fixed; left: 12px; top: 12px; right: 12px;
+  background: var(--hud-bg); backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 14px; padding: 10px 14px; z-index: 10;
+}
+#hud .row { display:flex; gap: 12px; align-items:center; flex-wrap: wrap; }
+#hud .small { font-size: 12px; opacity: 0.9; }
+#status { color: var(--accent); }
+code { background: rgba(255,255,255,0.08); padding: 2px 6px; border-radius: 6px; }
+details summary { cursor: pointer; }
+@media (prefers-reduced-motion: no-preference) { #hud { transition: opacity 0.3s ease; } }
+.vr #hud { opacity: 0.3; } .vr #hud:hover { opacity: 1; }
