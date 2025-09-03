@@ -44,7 +44,21 @@
   </div>
 
   <canvas id="app"></canvas>
-  <script type="module" src="./asset/js/main-webxr.js"></script>
+
+  <!-- Dynamic import for better error messages if the module fails -->
+  <script type="module">
+    const status = (t)=>{ const el=document.getElementById('status'); if(el) el.textContent = t; console.log('[Boot]', t); };
+    try {
+      await import('./asset/js/main-webxr.js');
+    } catch (e) {
+      status('Failed to load main-webxr.js — ' + (e?.message || e));
+      const pre = document.createElement('pre');
+      pre.textContent = (e?.stack || String(e));
+      pre.style.whiteSpace='pre-wrap'; pre.style.fontSize='11px';
+      document.getElementById('hud').appendChild(pre);
+    }
+  </script>
+
   <noscript>This experience requires JavaScript and a WebXR-capable browser (Quest Browser).</noscript>
 </body>
 </html>
