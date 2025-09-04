@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <title>Plaza — Fantasy Castle Town</title>
+  <link rel="stylesheet" href="../asset/css/style.css"/>
+  
+<!-- Polyfill for older Safari/iPadOS so import maps work -->
+<script async src="https://cdn.jsdelivr.net/npm/es-module-shims@1.10.0/dist/es-module-shims.min.js"></script>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.162.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.162.0/examples/jsm/",
+    "@pixiv/three-vrm": "https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@2.0.3/lib/three-vrm.module.js"
+  }
+}
+</script>
+
+</head>
+<body data-title="Plaza — Fantasy Castle Town">
+  <div class="topbar">
+    <a href="../index.html">← Home</a>
+    <div style="margin-left:auto"></div>
+    <span class="small">WebXR ready • Quest 3 supported</span>
+  </div>
+  <canvas id="scene"></canvas>
+  <div id="hud">Booting…</div>
+
+  <div class="grid" id="buildings">
+    <a class="card" href="tracy.html"><h4>Cathedral Studio — Tracy</h4><div>Art & 3D (AI Arta, Meshy)</div></a>
+    <a class="card" href="wings-lab.html"><h4>Wings Lab — Charlotte/Nina</h4><div>Attach & resize wings</div></a>
+    <!-- Add more buildings/rooms here -->
+  </div>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { VRButton } from 'three/addons/webxr/VRButton.js';
+
+    const hud = document.getElementById('hud');
+    const canvas = document.getElementById('scene');
+
+    const renderer = new THREE.WebGLRenderer({ antialias:true, canvas });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.xr.enabled = true;
+    document.body.appendChild(VRButton.createButton(renderer));
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0e1117);
+
+    const camera = new THREE.PerspectiveCamera(70, innerWidth/innerHeight, 0.1, 200);
+    camera.position.set(0, 1.6, 4);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.target.set(0,1.5,0); controls.update();
+
+    const hemi = new THREE.HemisphereLight(0xffffff, 0x223344, 1.0);
+    scene.add(hemi);
+
+    const dir = new THREE.DirectionalLight(0xffffff, 1.0);
+    dir.position.set(5,10,7);
+    scene.add(dir);
+
+    // Simple plaza floor
+    const floor = new THREE.Mesh(
+      new THREE.CircleGeometry(10, 64),
+      new THREE.MeshStandardMaterial({ color: 0x1a2333, metalness:0.1, roughness:0.9 })
+    );
+    floor.rotation.x = -Math.PI/2;
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    const ring = new THREE.Mesh(
+      new THREE.RingGeometry(10.2, 10.6, 64),
+      new THREE.MeshBasicMaterial({ color:0x334460, side: THREE.DoubleSide })
+    );
+    ring.rotation.x = -Math.PI/2;
+    scene.add(ring);
+
+    function onResize() {
+      camera.aspect = innerWidth/innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(innerWidth, innerHeight);
+    }
+    addEventListener('resize', onResize);
+
+    hud.textContent = 'Plaza ready — enter VR on Quest or tap a building.';
+
+    renderer.setAnimationLoop(()=>{
+      renderer.render(scene, camera);
+    });
+  </script>
+</body>
+</html>

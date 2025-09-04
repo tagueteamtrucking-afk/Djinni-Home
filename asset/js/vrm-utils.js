@@ -1,0 +1,1 @@
+// Placeholder for shared VRM utilities (extend later as needed)

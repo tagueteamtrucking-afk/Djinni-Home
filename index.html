@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <title>Fantasy Castle Town — Home</title>
+  <link rel="stylesheet" href="asset/css/style.css"/>
+  
+<!-- Polyfill for older Safari/iPadOS so import maps work -->
+<script async src="https://cdn.jsdelivr.net/npm/es-module-shims@1.10.0/dist/es-module-shims.min.js"></script>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.162.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.162.0/examples/jsm/",
+    "@pixiv/three-vrm": "https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@2.0.3/lib/three-vrm.module.js"
+  }
+}
+</script>
+
+  <style>body{display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:1rem}</style>
+</head>
+<body>
+  <h1>Fantasy Castle Town</h1>
+  <p>Cross‑device WebXR starter (Quest 3 / iPad / Phone / PC)</p>
+  <div class="buttons">
+    <a class="btn" href="pages/plaza.html">Enter Plaza</a>
+    <a class="btn" href="pages/wings-lab.html">Wings Lab</a>
+    <a class="btn" href="pages/tracy.html">Tracy — Cathedral Studio</a>
+  </div>
+  <p class="note">Tip: Host this on GitHub Pages. Import map fixes the “three.js” bare‑specifier issue.</p>
+</body>
+</html>

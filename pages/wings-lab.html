@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <title>Wings Lab — Attach & Resize</title>
+  <link rel="stylesheet" href="../asset/css/style.css"/>
+  
+<!-- Polyfill for older Safari/iPadOS so import maps work -->
+<script async src="https://cdn.jsdelivr.net/npm/es-module-shims@1.10.0/dist/es-module-shims.min.js"></script>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.162.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.162.0/examples/jsm/",
+    "@pixiv/three-vrm": "https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@2.0.3/lib/three-vrm.module.js"
+  }
+}
+</script>
+
+</head>
+<body data-title="Wings Lab — Attach & Resize">
+  <div class="topbar">
+    <a href="plaza.html">← Plaza</a>
+    <div style="margin-left:auto"></div>
+    <span class="small">Supports .vrm + .fbx (wings)</span>
+  </div>
+  <canvas id="scene"></canvas>
+  <div id="hud">Booting…</div>
+
+  <div class="panel">
+    <h3>Load Character & Wings</h3>
+    <label>Character (.vrm)</label>
+    <input id="vrmUrl" type="url" placeholder="../asset/models/whitestar.vrm"/>
+    <label>Wings (.fbx)</label>
+    <input id="wingsUrl" type="url" placeholder="../asset/wings/wing1415.fbx"/>
+    <div class="row" style="margin-top:.5rem">
+      <button class="btn" id="loadVRM">Load VRM</button>
+      <button class="btn" id="loadWings">Load Wings</button>
+    </div>
+    <h3 style="margin-top:.75rem">Placement</h3>
+    <div class="row">
+      <div>
+        <label>Bone</label>
+        <select id="bone">
+          <option value="chest">chest</option>
+          <option value="upperChest">upperChest</option>
+          <option value="spine">spine</option>
+        </select>
+      </div>
+      <div>
+        <label>Scale</label>
+        <input id="scale" type="number" step="0.05" value="1.0"/>
+      </div>
+    </div>
+    <div class="row">
+      <div><label>Offset X</label><input id="ox" type="number" step="0.01" value="0"/></div>
+      <div><label>Offset Y</label><input id="oy" type="number" step="0.01" value="0.2"/></div>
+    </div>
+    <div class="row">
+      <div><label>Offset Z</label><input id="oz" type="number" step="0.01" value="-0.05"/></div>
+      <div><label>Yaw (deg)</label><input id="yaw" type="number" step="1" value="0"/></div>
+    </div>
+    <div class="row" style="margin-top:.5rem">
+      <button class="btn" id="attach">Attach</button>
+      <button class="btn" id="lock">Lock in Place</button>
+    </div>
+    <div class="small" style="margin-top:.5rem">Tip: After attaching, tweak offsets and scale then Lock.</div>
+  </div>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
+    import { VRMLoaderPlugin } from '@pixiv/three-vrm';
+
+    const canvas = document.getElementById('scene');
+    const hud = document.getElementById('hud');
+
+    const renderer = new THREE.WebGLRenderer({ antialias:true, canvas });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.setSize(innerWidth, innerHeight);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0b0f15);
+
+    const camera = new THREE.PerspectiveCamera(70, innerWidth/innerHeight, 0.1, 200);
+    camera.position.set(0, 1.45, 3);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.target.set(0, 1.4, 0); controls.update();
+
+    const hemi = new THREE.HemisphereLight(0xffffff, 0x223344, 1.0); scene.add(hemi);
+    const dir = new THREE.DirectionalLight(0xffffff, 0.9); dir.position.set(5,10,7); scene.add(dir);
+
+    const floor = new THREE.Mesh(new THREE.CircleGeometry(4.5, 64), new THREE.MeshStandardMaterial({color:0x1b2331, roughness:0.92}));
+    floor.rotation.x = -Math.PI/2; scene.add(floor);
+
+    const gltfLoader = new GLTFLoader();
+    gltfLoader.register( parser => new VRMLoaderPlugin(parser) );
+    const fbxLoader = new FBXLoader();
+
+    let vrm = null;
+    let wings = null;
+    let lockMode = false;
+
+    document.getElementById('loadVRM').onclick = async () => {
+      const url = (document.getElementById('vrmUrl').value || '../asset/models/whitestar.vrm').trim();
+      hud.textContent = 'Loading VRM…';
+      try {
+        const gltf = await gltfLoader.loadAsync(url);
+        const v = gltf.userData.vrm;
+        if (!v) throw new Error('No VRM in file');
+        if (vrm) scene.remove(vrm.scene);
+        vrm = v; vrm.scene.rotation.y = Math.PI; scene.add(vrm.scene);
+        hud.textContent = 'VRM loaded.';
+      } catch (e) {
+        hud.textContent = 'VRM load failed: ' + e.message;
+        console.error(e);
+      }
+    };
+
+    document.getElementById('loadWings').onclick = async () => {
+      const url = (document.getElementById('wingsUrl').value || '../asset/wings/wing1415.fbx').trim();
+      hud.textContent = 'Loading wings (.fbx)…';
+      try {
+        const obj = await fbxLoader.loadAsync(url);
+        obj.traverse(n=>{ if(n.isMesh){ n.castShadow = true; n.receiveShadow = true; } });
+        if (wings) scene.remove(wings);
+        wings = obj;
+        scene.add(wings);
+        hud.textContent = 'Wings loaded. Attach when ready.';
+      } catch (e) {
+        hud.textContent = 'Wings load failed: ' + e.message;
+        console.error(e);
+      }
+    };
+
+    function attachNow(){
+      if(!vrm || !wings) { hud.textContent='Load VRM and wings first.'; return; }
+      const boneName = document.getElementById('bone').value;
+      const target = vrm.humanoid?.getBoneNode(boneName) || vrm.scene;
+      const s = parseFloat(document.getElementById('scale').value || '1.0');
+      const ox = parseFloat(document.getElementById('ox').value || '0');
+      const oy = parseFloat(document.getElementById('oy').value || '0.2');
+      const oz = parseFloat(document.getElementById('oz').value || '-0.05');
+      const yawDeg = parseFloat(document.getElementById('yaw').value || '0');
+      if (!target) { hud.textContent = 'Bone not found: '+boneName; return; }
+
+      // Reparent and reset local transform
+      target.add(wings);
+      wings.position.set(ox, oy, oz);
+      wings.scale.setScalar(s);
+      wings.rotation.set(0, THREE.MathUtils.degToRad(yawDeg), 0);
+
+      hud.textContent = `Attached to ${boneName} (scale ${s}).`;
+    }
+
+    document.getElementById('attach').onclick = attachNow;
+    document.getElementById('lock').onclick = () => { lockMode = true; hud.textContent = 'Locked — transforms preserved.'; };
+
+    function onResize() { camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); }
+    addEventListener('resize', onResize);
+
+    renderer.setAnimationLoop(()=>{
+      renderer.render(scene, camera);
+    });
+  </script>
+</body>
+</html>
