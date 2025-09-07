@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <title>Castle‑Town Plaza</title>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.152.2/examples/jsm/",
+    "@pixiv/three-vrm": "https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@2.1.5/lib/three-vrm.module.js"
+  }
+}
+</script>
+
+  <link rel="stylesheet" href="../asset/css/style.css"/>
+  <script defer src="../asset/js/config.js"></script>
+</head>
+<body>
+  <div class="topbar">🏰 Castle‑Town Plaza — <a href="#" onclick="localStorage.removeItem('BACKEND_URL');location.reload()">reset backend</a></div>
+  <div id="hud">Booting…</div>
+  <main class="grid" id="grid"></main>
+  <footer>Tip: add <code>?backend=http://localhost:8000</code> to the URL to set the backend target.</footer>
+  <script type="module">
+    import { hud } from '../asset/js/util.js';
+    const backend = window.BACKEND_URL;
+    async function boot(){
+      hud('Fetching bootstrap… '+backend);
+      const res = await fetch(backend + '/client/bootstrap'); 
+      const data = await res.json();
+      const grid = document.getElementById('grid');
+      grid.innerHTML = '';
+      for(const r of data.rooms.rooms){
+        const el = document.createElement('div');
+        el.className='card';
+        el.innerHTML = `<h3 style="margin:0 0 8px 0">{}</h3><div style="opacity:.8;font-size:12px">{}</div><div style="margin-top:10px"><a class="btn" href="room.html?id=${r.id}">Enter Room</a></div>`
+          .replace("{}", r.title).replace("{}", r.room);
+        grid.appendChild(el);
+      }
+      hud('Plaza ready.');
+    } boot().catch(e=>hud('Error: '+e.message));
+  </script>
+</body>
+</html>
