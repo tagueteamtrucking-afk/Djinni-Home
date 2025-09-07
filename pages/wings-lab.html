@@ -1,0 +1,54 @@
+
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>Wings Lab — VRM + FBX</title>
+<link rel="stylesheet" href="../style.css"/>
+<script async src="https://cdn.jsdelivr.net/npm/es-module-shims@1.10.0/dist/es-module-shims.min.js"></script>
+<script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.152.2/build/three.module.js","three/addons/":"https://unpkg.com/three@0.152.2/examples/jsm/","@pixiv/three-vrm":"https://unpkg.com/@pixiv/three-vrm@2.0.3/lib/three-vrm.module.js"}}</script>
+<style>#ui{position:fixed;top:8px;left:8px;background:#12151c;border:1px solid #1e2230;border-radius:10px;padding:10px;z-index:10}.row{margin-bottom:8px;font-size:13px}canvas{width:100vw;height:100vh;display:block}input[type=range]{width:200px}</style>
+</head><body>
+<div id="ui">
+  <div class="row"><b>1) Load VRM</b><br/><input type="file" id="vrmFile" accept=".vrm"/></div>
+  <div class="row"><b>2) Load Wings (FBX)</b><br/><input type="file" id="wingsFile" accept=".fbx"/></div>
+  <div class="row"><b>Texture</b><br/><input type="file" id="texFile" accept=".png,.jpg,.jpeg,.webp"/></div>
+  <div class="row"><b>Transform</b><br/>X <input id="tx" type="range" min="-1" max="1" step="0.01" value="0"/> Y <input id="ty" type="range" min="-1" max="1" step="0.01" value="0.5"/> Z <input id="tz" type="range" min="-1" max="1" step="0.01" value="-0.1"/><br/>Scale <input id="s" type="range" min="0.1" max="3" step="0.01" value="1"/></div>
+  <div class="row"><button id="save">Save Offsets</button> <span id="msg"></span></div>
+</div>
+<canvas id="c"></canvas>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
+import { VRM, VRMLoaderPlugin } from '@pixiv/three-vrm';
+import 'three/addons/loaders/GLTFLoader.js';
+
+const canvas=document.getElementById('c');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true}); renderer.setSize(innerWidth,innerHeight);
+const scene=new THREE.Scene(); scene.background=new THREE.Color(0x0b0d12);
+const camera=new THREE.PerspectiveCamera(35, innerWidth/innerHeight, .1, 100); camera.position.set(0,1.4,2.5);
+const controls=new OrbitControls(camera, renderer.domElement);
+scene.add(new THREE.DirectionalLight(0xffffff,2), new THREE.AmbientLight(0xffffff,.3));
+
+const loader=new THREE.GLTFLoader(); loader.register(p=>new VRMLoaderPlugin(p));
+const fbx=new FBXLoader();
+let currentVRM=null,wings=null;
+
+function sync(){ if(!wings) return; wings.position.set(parseFloat(tx.value),parseFloat(ty.value),parseFloat(tz.value)); wings.scale.setScalar(parseFloat(s.value)); }
+function attach(vrm,obj){ const bone=vrm.humanoid.getBoneNode(VRM.BoneName.Hips)||vrm.scene; bone.add(obj); sync(); }
+function loop(){ requestAnimationFrame(loop); if(currentVRM) currentVRM.update(1/60); renderer.render(scene,camera);} loop();
+
+vrmFile.onchange=async e=>{const f=e.target.files[0]; if(!f) return; const arr=await f.arrayBuffer();
+  loader.parse(arr,'',g=>{currentVRM=g.userData.vrm; scene.add(currentVRM.scene); if(wings) attach(currentVRM,wings);},err=>console.error(err));};
+
+wingsFile.onchange=async e=>{const f=e.target.files[0]; if(!f) return; const url=URL.createObjectURL(f); wings=await fbx.loadAsync(url);
+  wings.traverse(o=>{ if(o.isMesh) o.material=new THREE.MeshBasicMaterial({color:0xffffff}); });
+  if(currentVRM) attach(currentVRM,wings); else { scene.add(wings); sync(); } };
+
+texFile.onchange=async e=>{ if(!wings) return; const f=e.target.files[0]; if(!f) return; const url=URL.createObjectURL(f);
+  const tex=new THREE.TextureLoader().load(url); wings.traverse(o=>{ if(o.isMesh){ o.material.map=tex; o.material.needsUpdate=true; } }); };
+
+[tx,ty,tz,s].forEach(el=> el.addEventListener('input', sync));
+save.onclick=()=>{ const data={x:parseFloat(tx.value),y:parseFloat(ty.value),z:parseFloat(tz.value),s:parseFloat(s.value)};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='wings_offsets.json'; a.click(); msg.textContent='Saved wings_offsets.json'; };
+</script>
+</body></html>

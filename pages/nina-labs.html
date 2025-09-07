@@ -1,0 +1,22 @@
+
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Nina Labs — Frontend Playground</title>
+<link rel="stylesheet" href="../style.css"/></head>
+<body>
+<header><h1>Nina Labs</h1><p>Three.js/WebXR test scene for rapid iteration.</p></header>
+<canvas id="cv"></canvas>
+<script type="module">
+import * as THREE from 'https://unpkg.com/three@0.152.2/build/three.module.js';
+import { OrbitControls } from 'https://unpkg.com/three@0.152.2/examples/jsm/controls/OrbitControls.js';
+const canvas=document.getElementById('cv');
+const r=new THREE.WebGLRenderer({canvas,antialias:true}); r.setSize(innerWidth,innerHeight); r.setPixelRatio(devicePixelRatio);
+const s=new THREE.Scene(); s.background=new THREE.Color(0x0b0d12);
+const c=new THREE.PerspectiveCamera(60,innerWidth/innerHeight,.1,100); c.position.set(0,1.2,3);
+const ctl=new OrbitControls(c,r.domElement);
+s.add(new THREE.DirectionalLight(0xffffff,1.5), new THREE.AmbientLight(0xffffff,.3), new THREE.GridHelper(10,10,0x223,0x112));
+const box=new THREE.Mesh(new THREE.BoxGeometry(1,1,1), new THREE.MeshStandardMaterial({color:0x1a7f64})); s.add(box);
+addEventListener('resize',()=>{c.aspect=innerWidth/innerHeight;c.updateProjectionMatrix();r.setSize(innerWidth,innerHeight);});
+(function loop(){ requestAnimationFrame(loop); box.rotation.y+=0.01; ctl.update(); r.render(s,c); })();
+</script>
+</body></html>
