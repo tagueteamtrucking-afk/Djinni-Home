@@ -1,0 +1,22 @@
+name: Label Sync
+on: workflow_dispatch
+permissions:
+  issues: write
+jobs:
+  upsert:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Upsert labels
+        env: { GH_TOKEN: ${{ github.token }} }
+        run: |
+          set -euo pipefail
+          upsert() {
+            local name="$1" color="$2" desc="$3"
+            if gh label list --json name -q '.[].name' | grep -xq "$name"; then
+              gh label edit "$name" --color "$color" --description "$desc"
+            else
+              gh label create "$name" --color "$color" --description "$desc"
+            fi
+          }
+          upsert overseer 1f6feb "Overseer automation tasks"
+          upsert needs-review f97316 "Requires human review"
